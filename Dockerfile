@@ -16,28 +16,26 @@ RUN apt-get update && \
 
 WORKDIR /app
 
-# Install Python dependencies (pinned via pyproject.toml)
-COPY pyproject.toml ./
+# Install Python dependencies
+COPY requirements.txt ./
 RUN pip install --no-cache-dir --upgrade pip && \
-    pip install --no-cache-dir .
+    pip install --no-cache-dir -r requirements.txt
 
 # Copy application code
+COPY README.md pyproject.toml ./
 COPY src/ ./src/
 COPY scripts/ ./scripts/
 COPY migrations/ ./migrations/
-COPY alembic.ini ./
+COPY data/ ./data/
 
-# Create data directories
+# Create data directories and permissions
 RUN mkdir -p /app/data/imports /app/logs && \
     chown -R appuser:appuser /app
 
 # Switch to non-root user
 USER appuser
 
-# Health check
-HEALTHCHECK --interval=30s --timeout=10s --retries=3 \
-    CMD python -c "from src.config import settings; print('healthy')" || exit 1
-
 # Default command: run the pipeline
-ENTRYPOINT ["python", "-m", "scripts.run_pipeline"]
+ENTRYPOINT ["python", "scripts/run_pipeline.py"]
 CMD ["run"]
+
