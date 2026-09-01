@@ -9,20 +9,21 @@ from __future__ import annotations
 
 from enum import Enum
 from pathlib import Path
-from typing import Optional
 
-from pydantic import Field, computed_field
+from pydantic import computed_field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class DataSourceMode(str, Enum):
     """How data is ingested into the pipeline."""
+
     API = "api"
     CSV = "csv"
 
 
 class LogFormat(str, Enum):
     """Log output format."""
+
     JSON = "json"
     CONSOLE = "console"
 
@@ -47,7 +48,7 @@ class Settings(BaseSettings):
     postgres_db: str = "polluxa_analytics"
     postgres_user: str = "polluxa"
     postgres_password: str = "changeme_secure_password"
-    database_url: Optional[str] = None
+    database_url: str | None = None
 
     @computed_field  # type: ignore[prop-decorator]
     @property

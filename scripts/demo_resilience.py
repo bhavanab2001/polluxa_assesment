@@ -57,7 +57,9 @@ def run_live_demo() -> None:
     # DEMO 1: Bad-Quality & Malformed Input Caught via DLQ
     # ─────────────────────────────────────────────────────────────
     console.print("\n[bold yellow]═══ SCENARIO 1: Malformed & Bad-Quality Data Isolation (DLQ) ═══[/bold yellow]")
-    console.print("[dim]Injecting deliberately corrupted outreach events (invalid timestamp, unknown event enum)...[/dim]\n")
+    console.print(
+        "[dim]Injecting deliberately corrupted outreach events (invalid timestamp, unknown event enum)...[/dim]\n"
+    )
 
     bad_events = [
         {
@@ -99,15 +101,17 @@ def run_live_demo() -> None:
     # DEMO 2: Mid-Run Failure & Idempotent Non-Duplicating Recovery
     # ─────────────────────────────────────────────────────────────
     console.print("\n[bold yellow]═══ SCENARIO 2: Idempotent Recovery & Zero Duplicate Guarantee ═══[/bold yellow]")
-    console.print("[dim]Executing back-to-back pipeline loads to prove deduplication and surrogate key consistency...[/dim]\n")
+    console.print(
+        "[dim]Executing back-to-back pipeline loads to prove deduplication and surrogate key consistency...[/dim]\n"
+    )
 
     count_before = session.execute(text("SELECT COUNT(*) FROM fact_outreach_event")).scalar() or 0
 
-    res1 = PipelineOrchestrator().run()
+    PipelineOrchestrator().run()
     count_after_first = session.execute(text("SELECT COUNT(*) FROM fact_outreach_event")).scalar() or 0
 
     # Execute immediate duplicate re-run (simulating restart after crash)
-    res2 = PipelineOrchestrator().run()
+    PipelineOrchestrator().run()
     count_after_second = session.execute(text("SELECT COUNT(*) FROM fact_outreach_event")).scalar() or 0
 
     table2 = Table(title="Demonstration 2: Idempotent Re-Run & Row Count Invariance")
@@ -117,36 +121,46 @@ def run_live_demo() -> None:
 
     table2.add_row("Initial Data Warehouse State", str(count_before), "0")
     table2.add_row("Pipeline Run #1 (Initial Load)", str(count_after_first), "0")
-    table2.add_row("Pipeline Run #2 (Recovery / Re-run)", str(count_after_second), "[bold green]0 (Exact match)[/bold green]")
+    table2.add_row(
+        "Pipeline Run #2 (Recovery / Re-run)", str(count_after_second), "[bold green]0 (Exact match)[/bold green]"
+    )
 
     console.print(table2)
-    console.print("[green]✓ INSERT ... ON CONFLICT DO UPDATE successfully prevented all duplicate primary & surrogate keys.[/green]")
+    console.print(
+        "[green]✓ INSERT ... ON CONFLICT DO UPDATE successfully prevented all duplicate primary & surrogate keys.[/green]"
+    )
 
     # ─────────────────────────────────────────────────────────────
     # DEMO 3: End-to-End Refresh Flowing to Real-Time KPIs
     # ─────────────────────────────────────────────────────────────
     console.print("\n[bold yellow]═══ SCENARIO 3: End-to-End Live Refresh Flowing to Analytics ═══[/bold yellow]")
-    console.print("[dim]Simulating live outreach event (MEETING_BOOKED) $\\rightarrow$ updating daily aggregates $\\rightarrow$ DQ audit...[/dim]\n")
+    console.print(
+        "[dim]Simulating live outreach event (MEETING_BOOKED) $\\rightarrow$ updating daily aggregates $\\rightarrow$ DQ audit...[/dim]\n"
+    )
 
     live_event_id = f"demo_live_{uuid.uuid4().hex[:8]}"
     now = datetime.now(timezone.utc)
-    date_key = int(now.strftime("%Y%m%d"))
+    int(now.strftime("%Y%m%d"))
 
     # Insert a live meeting booked event
     loader = IdempotentLoader(session=session)
-    agent_row = session.execute(text("SELECT agent_key, agent_id FROM dim_agent WHERE is_current = true LIMIT 1")).fetchone()
-    agent_key = agent_row[0] if agent_row else 1
+    agent_row = session.execute(
+        text("SELECT agent_key, agent_id FROM dim_agent WHERE is_current = true LIMIT 1")
+    ).fetchone()
+    agent_row[0] if agent_row else 1
     agent_id = agent_row[1] if agent_row else "agent_001"
 
-    live_event = [{
-        "id": live_event_id,
-        "agent_id": agent_id,
-        "lead_id": "lead_001",
-        "campaign_id": "camp_001",
-        "event_type": "MEETING_BOOKED",
-        "timestamp": now.isoformat(),
-        "status": "SUCCESS",
-    }]
+    live_event = [
+        {
+            "id": live_event_id,
+            "agent_id": agent_id,
+            "lead_id": "lead_001",
+            "campaign_id": "camp_001",
+            "event_type": "MEETING_BOOKED",
+            "timestamp": now.isoformat(),
+            "status": "SUCCESS",
+        }
+    ]
 
     clean_live = transformer.transform_outreach_events(live_event)
     loader.load_outreach_events(clean_live)
@@ -156,9 +170,16 @@ def run_live_demo() -> None:
     composite_score = scorer.run_all_checks()
 
     # Query live counters
-    invites = session.execute(text("SELECT COUNT(*) FROM fact_outreach_event WHERE event_type = 'INVITE_SENT'")).scalar() or 0
-    accepted = session.execute(text("SELECT COUNT(*) FROM fact_outreach_event WHERE event_type = 'ACCEPTED'")).scalar() or 0
-    meetings = session.execute(text("SELECT COUNT(*) FROM fact_outreach_event WHERE event_type = 'MEETING_BOOKED'")).scalar() or 0
+    invites = (
+        session.execute(text("SELECT COUNT(*) FROM fact_outreach_event WHERE event_type = 'INVITE_SENT'")).scalar() or 0
+    )
+    accepted = (
+        session.execute(text("SELECT COUNT(*) FROM fact_outreach_event WHERE event_type = 'ACCEPTED'")).scalar() or 0
+    )
+    meetings = (
+        session.execute(text("SELECT COUNT(*) FROM fact_outreach_event WHERE event_type = 'MEETING_BOOKED'")).scalar()
+        or 0
+    )
 
     table3 = Table(title="Demonstration 3: Live Data Warehouse & KPI Summary")
     table3.add_column("Live Metric", style="cyan")

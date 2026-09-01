@@ -12,7 +12,6 @@ Generates realistic LinkedIn outreach data including:
 from __future__ import annotations
 
 import json
-import os
 import random
 import sys
 from datetime import datetime, timedelta, timezone
@@ -36,14 +35,46 @@ DATA_DIR = PROJECT_ROOT / "data" / "imports"
 def _random_name() -> str:
     """Generate a random realistic name."""
     first_names = [
-        "Sarah", "James", "Priya", "Michael", "Aisha", "David", "Emma",
-        "Carlos", "Yuki", "Oliver", "Fatima", "Alex", "Nina", "Raj",
-        "Sophie", "Liam", "Mei", "Daniel", "Ana", "Thomas",
+        "Sarah",
+        "James",
+        "Priya",
+        "Michael",
+        "Aisha",
+        "David",
+        "Emma",
+        "Carlos",
+        "Yuki",
+        "Oliver",
+        "Fatima",
+        "Alex",
+        "Nina",
+        "Raj",
+        "Sophie",
+        "Liam",
+        "Mei",
+        "Daniel",
+        "Ana",
+        "Thomas",
     ]
     last_names = [
-        "Johnson", "Patel", "Williams", "Kumar", "Brown", "Chen",
-        "Garcia", "Kim", "Anderson", "Singh", "Taylor", "Nguyen",
-        "Martinez", "Lee", "Wilson", "Tanaka", "Robinson", "Ali",
+        "Johnson",
+        "Patel",
+        "Williams",
+        "Kumar",
+        "Brown",
+        "Chen",
+        "Garcia",
+        "Kim",
+        "Anderson",
+        "Singh",
+        "Taylor",
+        "Nguyen",
+        "Martinez",
+        "Lee",
+        "Wilson",
+        "Tanaka",
+        "Robinson",
+        "Ali",
     ]
     return f"{random.choice(first_names)} {random.choice(last_names)}"
 
@@ -51,11 +82,26 @@ def _random_name() -> str:
 def _random_company() -> str:
     """Generate a random company name."""
     companies = [
-        "TechCorp Global", "InnovateSoft", "DataDriven Inc", "CloudScale",
-        "NextGen Solutions", "FinTech Pro", "AI Dynamics", "GrowthLab",
-        "SaaS Masters", "Digital First", "Enterprise Logic", "ScaleUp HQ",
-        "RevOps Co", "PipelineAI", "SmartReach", "LeadGen Plus",
-        "B2B Connect", "SalesForce Pro", "MarketEdge", "CRM Innovators",
+        "TechCorp Global",
+        "InnovateSoft",
+        "DataDriven Inc",
+        "CloudScale",
+        "NextGen Solutions",
+        "FinTech Pro",
+        "AI Dynamics",
+        "GrowthLab",
+        "SaaS Masters",
+        "Digital First",
+        "Enterprise Logic",
+        "ScaleUp HQ",
+        "RevOps Co",
+        "PipelineAI",
+        "SmartReach",
+        "LeadGen Plus",
+        "B2B Connect",
+        "SalesForce Pro",
+        "MarketEdge",
+        "CRM Innovators",
     ]
     return random.choice(companies)
 
@@ -63,11 +109,22 @@ def _random_company() -> str:
 def _random_title() -> str:
     """Generate a random job title."""
     titles = [
-        "VP of Sales", "Head of Marketing", "CTO", "CEO", "COO",
-        "Director of Engineering", "Product Manager", "Sales Manager",
-        "Growth Lead", "Business Development Manager", "CMO",
-        "Head of Partnerships", "Director of Revenue", "Founder",
-        "VP of Engineering", "Senior Account Executive",
+        "VP of Sales",
+        "Head of Marketing",
+        "CTO",
+        "CEO",
+        "COO",
+        "Director of Engineering",
+        "Product Manager",
+        "Sales Manager",
+        "Growth Lead",
+        "Business Development Manager",
+        "CMO",
+        "Head of Partnerships",
+        "Director of Revenue",
+        "Founder",
+        "VP of Engineering",
+        "Senior Account Executive",
     ]
     return random.choice(titles)
 
@@ -88,9 +145,11 @@ def generate_sample_data() -> None:
     _write_json(DATA_DIR / "templates.json", templates)
     _write_json(DATA_DIR / "events.json", events)
 
-    print(f"Generated: {len(agents)} agents, {len(leads)} leads, "
-          f"{len(campaigns)} campaigns, {len(templates)} templates, "
-          f"{len(events)} events")
+    print(
+        f"Generated: {len(agents)} agents, {len(leads)} leads, "
+        f"{len(campaigns)} campaigns, {len(templates)} templates, "
+        f"{len(events)} events"
+    )
     print(f"Files written to: {DATA_DIR.absolute()}")
 
 
@@ -128,15 +187,17 @@ def _generate_leads(count: int) -> list[dict[str, Any]]:
 
     leads = []
     for i in range(count):
-        leads.append({
-            "id": f"lead_{i + 1:04d}",
-            "name": _random_name(),
-            "company": _random_company(),
-            "title": _random_title(),
-            "linkedin_url": f"https://linkedin.com/in/lead-{i + 1}",
-            "segment": random.choice(segments),
-            "status": random.choice(statuses),
-        })
+        leads.append(
+            {
+                "id": f"lead_{i + 1:04d}",
+                "name": _random_name(),
+                "company": _random_company(),
+                "title": _random_title(),
+                "linkedin_url": f"https://linkedin.com/in/lead-{i + 1}",
+                "segment": random.choice(segments),
+                "status": random.choice(statuses),
+            }
+        )
     return leads
 
 
@@ -211,8 +272,11 @@ def _generate_events(
 
             # Determine daily volume based on tier
             tier_limits = {
-                "< 1 Month": 5, "1 Month": 10, "2-6 Months": 15,
-                "6-12 Months": 25, "1+ Year": 30,
+                "< 1 Month": 5,
+                "1 Month": 10,
+                "2-6 Months": 15,
+                "6-12 Months": 25,
+                "1+ Year": 30,
             }
             max_invites = tier_limits.get(agent["account_age"], 15)
 
@@ -231,16 +295,18 @@ def _generate_events(
                 )
 
                 # INVITE_SENT
-                events.append({
-                    "id": f"evt_{event_id:06d}",
-                    "agent_id": agent["id"],
-                    "lead_id": lead["id"],
-                    "campaign_id": campaign["id"],
-                    "template_id": template["id"],
-                    "event_type": "INVITE_SENT",
-                    "timestamp": timestamp.isoformat(),
-                    "status": "SUCCESS",
-                })
+                events.append(
+                    {
+                        "id": f"evt_{event_id:06d}",
+                        "agent_id": agent["id"],
+                        "lead_id": lead["id"],
+                        "campaign_id": campaign["id"],
+                        "template_id": template["id"],
+                        "event_type": "INVITE_SENT",
+                        "timestamp": timestamp.isoformat(),
+                        "status": "SUCCESS",
+                    }
+                )
                 event_id += 1
 
                 # ACCEPTED (with anomaly injection)
@@ -255,15 +321,17 @@ def _generate_events(
                         hours=random.randint(1, 48),
                         minutes=random.randint(0, 59),
                     )
-                    events.append({
-                        "id": f"evt_{event_id:06d}",
-                        "agent_id": agent["id"],
-                        "lead_id": lead["id"],
-                        "campaign_id": campaign["id"],
-                        "event_type": "ACCEPTED",
-                        "timestamp": accept_time.isoformat(),
-                        "status": "SUCCESS",
-                    })
+                    events.append(
+                        {
+                            "id": f"evt_{event_id:06d}",
+                            "agent_id": agent["id"],
+                            "lead_id": lead["id"],
+                            "campaign_id": campaign["id"],
+                            "event_type": "ACCEPTED",
+                            "timestamp": accept_time.isoformat(),
+                            "status": "SUCCESS",
+                        }
+                    )
                     event_id += 1
 
                     # REPLY_RECEIVED (~20% of accepted)
@@ -273,16 +341,18 @@ def _generate_events(
                             minutes=random.randint(0, 59),
                         )
                         response_minutes = int((reply_time - accept_time).total_seconds() / 60)
-                        events.append({
-                            "id": f"evt_{event_id:06d}",
-                            "agent_id": agent["id"],
-                            "lead_id": lead["id"],
-                            "campaign_id": campaign["id"],
-                            "event_type": "REPLY_RECEIVED",
-                            "timestamp": reply_time.isoformat(),
-                            "status": "SUCCESS",
-                            "response_time_minutes": response_minutes,
-                        })
+                        events.append(
+                            {
+                                "id": f"evt_{event_id:06d}",
+                                "agent_id": agent["id"],
+                                "lead_id": lead["id"],
+                                "campaign_id": campaign["id"],
+                                "event_type": "REPLY_RECEIVED",
+                                "timestamp": reply_time.isoformat(),
+                                "status": "SUCCESS",
+                                "response_time_minutes": response_minutes,
+                            }
+                        )
                         event_id += 1
 
                         # MEETING_BOOKED (~25% of replies)
@@ -290,43 +360,51 @@ def _generate_events(
                             meeting_time = reply_time + timedelta(
                                 hours=random.randint(2, 24),
                             )
-                            events.append({
-                                "id": f"evt_{event_id:06d}",
-                                "agent_id": agent["id"],
-                                "lead_id": lead["id"],
-                                "campaign_id": campaign["id"],
-                                "event_type": "MEETING_BOOKED",
-                                "timestamp": meeting_time.isoformat(),
-                                "status": "SUCCESS",
-                            })
+                            events.append(
+                                {
+                                    "id": f"evt_{event_id:06d}",
+                                    "agent_id": agent["id"],
+                                    "lead_id": lead["id"],
+                                    "campaign_id": campaign["id"],
+                                    "event_type": "MEETING_BOOKED",
+                                    "timestamp": meeting_time.isoformat(),
+                                    "status": "SUCCESS",
+                                }
+                            )
                             event_id += 1
 
     # Add some deliberately bad records for DQ testing
-    events.append({
-        "id": f"evt_{event_id:06d}",
-        "agent_id": None,  # Missing agent
-        "lead_id": "lead_0001",
-        "event_type": "INVITE_SENT",
-        "timestamp": datetime.now(timezone.utc).isoformat(),
-    })
+    events.append(
+        {
+            "id": f"evt_{event_id:06d}",
+            "agent_id": None,  # Missing agent
+            "lead_id": "lead_0001",
+            "event_type": "INVITE_SENT",
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+        }
+    )
     event_id += 1
 
-    events.append({
-        "id": f"evt_{event_id:06d}",
-        "agent_id": "agent_001",
-        "lead_id": "lead_0001",
-        "event_type": "UNKNOWN_TYPE",  # Invalid event type
-        "timestamp": datetime.now(timezone.utc).isoformat(),
-    })
+    events.append(
+        {
+            "id": f"evt_{event_id:06d}",
+            "agent_id": "agent_001",
+            "lead_id": "lead_0001",
+            "event_type": "UNKNOWN_TYPE",  # Invalid event type
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+        }
+    )
     event_id += 1
 
-    events.append({
-        "id": f"evt_{event_id:06d}",
-        "agent_id": "agent_001",
-        "lead_id": "lead_0001",
-        "event_type": "INVITE_SENT",
-        "timestamp": "not-a-date",  # Unparseable timestamp
-    })
+    events.append(
+        {
+            "id": f"evt_{event_id:06d}",
+            "agent_id": "agent_001",
+            "lead_id": "lead_0001",
+            "event_type": "INVITE_SENT",
+            "timestamp": "not-a-date",  # Unparseable timestamp
+        }
+    )
 
     return events
 

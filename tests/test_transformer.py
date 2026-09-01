@@ -1,8 +1,11 @@
 """Tests for data transformer and normalization."""
 
-import pytest
 from src.pipeline.dead_letter import DeadLetterQueue
-from src.pipeline.transformer import DataTransformer, _normalize_event_type, _parse_timestamp
+from src.pipeline.transformer import (
+    DataTransformer,
+    _normalize_event_type,
+    _parse_timestamp,
+)
 
 
 def test_normalize_event_type():

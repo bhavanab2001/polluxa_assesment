@@ -101,9 +101,7 @@ class IdempotentLoader:
 
                     # Build SET clause for update
                     if update_columns:
-                        set_clause = ", ".join(
-                            [f"{col} = EXCLUDED.{col}" for col in update_columns]
-                        )
+                        set_clause = ", ".join([f"{col} = EXCLUDED.{col}" for col in update_columns])
                         sql = text(f"""
                             INSERT INTO {table_name} ({col_list})
                             VALUES ({placeholders})
@@ -127,7 +125,7 @@ class IdempotentLoader:
                         result.failed += 1
                         self.dlq.add(
                             record,
-                            f"Load error: {str(exc)}",
+                            f"Load error: {exc!s}",
                             "loader",
                             self.run_id,
                         )
@@ -324,20 +322,16 @@ class IdempotentLoader:
                     try:
                         # Resolve dimension keys
                         agent_key = self._resolve_dimension_key(
-                            "dim_agent", "agent_key", "agent_id",
-                            record.get("agent_id"), scd2=True
+                            "dim_agent", "agent_key", "agent_id", record.get("agent_id"), scd2=True
                         )
                         lead_key = self._resolve_dimension_key(
-                            "dim_lead", "lead_key", "lead_id",
-                            record.get("lead_id"), scd2=True
+                            "dim_lead", "lead_key", "lead_id", record.get("lead_id"), scd2=True
                         )
                         campaign_key = self._resolve_dimension_key(
-                            "dim_campaign", "campaign_key", "campaign_id",
-                            record.get("campaign_id")
+                            "dim_campaign", "campaign_key", "campaign_id", record.get("campaign_id")
                         )
                         template_key = self._resolve_dimension_key(
-                            "dim_message_template", "template_key", "template_id",
-                            record.get("template_id")
+                            "dim_message_template", "template_key", "template_id", record.get("template_id")
                         )
 
                         db_result = self.session.execute(

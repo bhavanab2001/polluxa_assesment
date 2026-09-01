@@ -1,7 +1,5 @@
 """Tests for statistical anomaly detection and risk modeling."""
 
-import numpy as np
-import pytest
 from src.analytics.anomaly import AnomalyDetector
 
 

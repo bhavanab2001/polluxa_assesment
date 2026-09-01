@@ -10,7 +10,6 @@ from src.config import settings
 
 class Base(DeclarativeBase):
     """Base class for all SQLAlchemy ORM models."""
-    pass
 
 
 # Engine and session factory — lazy initialization
@@ -49,8 +48,8 @@ def get_session() -> Session:
 def init_db() -> None:
     """Create all tables defined in the models."""
     # Explicitly import all model modules so Base.metadata is fully populated
-    import src.models.dimensions  # noqa: F401
-    import src.models.facts  # noqa: F401
+    import src.models.dimensions
+    import src.models.facts
     import src.models.staging  # noqa: F401
 
     Base.metadata.create_all(get_engine())

@@ -34,6 +34,7 @@ logger = get_logger("anomaly")
 @dataclass
 class AnomalyResult:
     """Result of anomaly detection for a single metric."""
+
     metric_name: str
     current_value: float
     baseline_mean: float
@@ -198,9 +199,13 @@ class AnomalyDetector:
             return AnomalyResult(
                 metric_name=metric_name,
                 current_value=arr[-1] if len(arr) > 0 else 0.0,
-                baseline_mean=0.0, baseline_std=0.0, z_score=0.0,
-                iqr_lower=0.0, iqr_upper=0.0,
-                anomaly_score=0, method_triggered="none",
+                baseline_mean=0.0,
+                baseline_std=0.0,
+                z_score=0.0,
+                iqr_lower=0.0,
+                iqr_upper=0.0,
+                anomaly_score=0,
+                method_triggered="none",
                 details={"reason": "insufficient_data"},
             )
 
@@ -253,9 +258,13 @@ class AnomalyDetector:
             return AnomalyResult(
                 metric_name="ghosting_rate",
                 current_value=0.0,
-                baseline_mean=0.0, baseline_std=0.0, z_score=0.0,
-                iqr_lower=0.0, iqr_upper=0.0,
-                anomaly_score=0, method_triggered="none",
+                baseline_mean=0.0,
+                baseline_std=0.0,
+                z_score=0.0,
+                iqr_lower=0.0,
+                iqr_upper=0.0,
+                anomaly_score=0,
+                method_triggered="none",
                 details={"reason": "no_data"},
             )
 

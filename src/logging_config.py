@@ -38,17 +38,13 @@ def set_correlation_id(cid: str | None = None) -> str:
     return cid
 
 
-def add_correlation_id(
-    logger: Any, method_name: str, event_dict: dict[str, Any]
-) -> dict[str, Any]:
+def add_correlation_id(logger: Any, method_name: str, event_dict: dict[str, Any]) -> dict[str, Any]:
     """Structlog processor to inject correlation_id into every log entry."""
     event_dict["correlation_id"] = get_correlation_id()
     return event_dict
 
 
-def add_component(
-    logger: Any, method_name: str, event_dict: dict[str, Any]
-) -> dict[str, Any]:
+def add_component(logger: Any, method_name: str, event_dict: dict[str, Any]) -> dict[str, Any]:
     """Structlog processor to add the component name from logger name."""
     event_dict.setdefault("component", event_dict.get("_logger_name", "root"))
     return event_dict

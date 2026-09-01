@@ -90,9 +90,7 @@ class AlertNotifier:
 
         return success
 
-    def alert_pipeline_failure(
-        self, run_id: str, error_message: str, duration_seconds: float
-    ) -> bool:
+    def alert_pipeline_failure(self, run_id: str, error_message: str, duration_seconds: float) -> bool:
         """Send alert for pipeline execution failure."""
         return self.send_alert(
             title="🚨 Pipeline Failure",
@@ -126,9 +124,7 @@ class AlertNotifier:
             },
         )
 
-    def alert_anomalous_duration(
-        self, run_id: str, duration: float, mean_duration: float, std_duration: float
-    ) -> bool:
+    def alert_anomalous_duration(self, run_id: str, duration: float, mean_duration: float, std_duration: float) -> bool:
         """Send alert when pipeline run duration is anomalous (> 2σ)."""
         z_score = (duration - mean_duration) / std_duration if std_duration > 0 else 0
         return self.send_alert(
@@ -147,9 +143,7 @@ class AlertNotifier:
             },
         )
 
-    def alert_high_risk_agent(
-        self, agent_id: str, risk_score: float, risk_level: str, justification: str
-    ) -> bool:
+    def alert_high_risk_agent(self, agent_id: str, risk_score: float, risk_level: str, justification: str) -> bool:
         """Send alert when an agent is classified as high risk."""
         return self.send_alert(
             title=f"🔴 High Risk Agent: {agent_id}",
@@ -162,9 +156,7 @@ class AlertNotifier:
             },
         )
 
-    def _send_webhook(
-        self, title: str, message: str, level: str, details: dict | None
-    ) -> None:
+    def _send_webhook(self, title: str, message: str, level: str, details: dict | None) -> None:
         """Send alert via webhook (Slack/Teams compatible)."""
         # Slack-compatible payload
         color_map = {
@@ -180,10 +172,7 @@ class AlertNotifier:
                     "color": color_map.get(level, "#808080"),
                     "title": title,
                     "text": message,
-                    "fields": [
-                        {"title": k, "value": str(v), "short": True}
-                        for k, v in (details or {}).items()
-                    ],
+                    "fields": [{"title": k, "value": str(v), "short": True} for k, v in (details or {}).items()],
                     "ts": int(datetime.now(timezone.utc).timestamp()),
                 }
             ],
@@ -197,9 +186,7 @@ class AlertNotifier:
         response.raise_for_status()
         logger.info("webhook_alert_sent", url=self.webhook_url)
 
-    def _send_email(
-        self, title: str, message: str, level: str, details: dict | None
-    ) -> None:
+    def _send_email(self, title: str, message: str, level: str, details: dict | None) -> None:
         """Send alert via SMTP email."""
         msg = MIMEMultipart("alternative")
         msg["Subject"] = f"[{level}] {title}"

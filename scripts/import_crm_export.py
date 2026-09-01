@@ -19,11 +19,13 @@ if hasattr(sys.stdout, "reconfigure"):
 if hasattr(sys.stderr, "reconfigure"):
     sys.stderr.reconfigure(encoding="utf-8", errors="replace")
 
-from sqlalchemy import select, text
+from sqlalchemy import select
+
 from src.logging_config import setup_logging
 from src.models import get_session, init_db
-from src.models.dimensions import DimAgent, DimLead, DimCampaign, DimAccountTier, DimDate
-from src.models.facts import FactOutreachEvent, FactDailyAgentActivity
+from src.models.dimensions import DimAgent, DimCampaign, DimLead
+from src.models.facts import FactOutreachEvent
+
 
 def parse_datetime(val: str | None) -> datetime | None:
     if not val or not val.strip():
@@ -66,9 +68,7 @@ def import_real_crm_data(csv_path: str = "data/newton-leads-all-110-2026-08-31.c
 
     # 2. Ensure Campaign exists
     camp_id = "camp_tech_recruiters"
-    campaign = session.execute(
-        select(DimCampaign).where(DimCampaign.campaign_id == camp_id)
-    ).scalar_one_or_none()
+    campaign = session.execute(select(DimCampaign).where(DimCampaign.campaign_id == camp_id)).scalar_one_or_none()
 
     if not campaign:
         campaign = DimCampaign(
@@ -107,7 +107,7 @@ def import_real_crm_data(csv_path: str = "data/newton-leads-all-110-2026-08-31.c
             industry = (row.get("Industry") or row.get("industry") or "").strip()
             status_raw = (row.get("SDR Status") or row.get("status") or "captured").strip().lower()
             url = (row.get("LinkedIn URL") or row.get("linkedin_url") or "").strip()
-            
+
             sent_at_str = (row.get("Invite Sent At") or row.get("sent_at") or "").strip()
             connected_at_str = (row.get("Connected At") or row.get("accepted_at") or "").strip()
             added_on_str = (row.get("Added On") or "").strip()
@@ -195,7 +195,7 @@ def import_real_crm_data(csv_path: str = "data/newton-leads-all-110-2026-08-31.c
                 acc_dt = connected_dt or datetime.now(timezone.utc)
                 acc_date_key = int(acc_dt.strftime("%Y%m%d"))
                 acc_evt_id = f"evt_acc_{lead_id}"
-                
+
                 resp_time_mins = None
                 if sent_dt and acc_dt >= sent_dt:
                     resp_time_mins = int((acc_dt - sent_dt).total_seconds() / 60)
@@ -226,6 +226,7 @@ def import_real_crm_data(csv_path: str = "data/newton-leads-all-110-2026-08-31.c
     print(f"  • Leads Updated: {leads_updated}")
     print(f"  • Outreach Events Added: {events_loaded}")
     session.close()
+
 
 if __name__ == "__main__":
     target_csv = sys.argv[1] if len(sys.argv) > 1 else "data/newton-leads-all-110-2026-08-31.csv"

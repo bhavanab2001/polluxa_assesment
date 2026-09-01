@@ -1,6 +1,5 @@
 """Tests for Data Quality checks and composite scoring."""
 
-import pytest
 from src.quality.scoring import DIMENSION_WEIGHTS
 
 

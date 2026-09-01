@@ -13,8 +13,9 @@ from __future__ import annotations
 import csv
 import json
 import time
+from collections.abc import Generator
 from pathlib import Path
-from typing import Any, Generator
+from typing import Any
 
 import httpx
 
@@ -26,11 +27,11 @@ logger = get_logger("extractor")
 
 class ExtractionError(Exception):
     """Raised when data extraction fails after exhausting retries."""
-    pass
 
 
 class RateLimitError(Exception):
     """Raised when the API returns 429 Too Many Requests."""
+
     def __init__(self, retry_after: float = 60.0):
         self.retry_after = retry_after
         super().__init__(f"Rate limited. Retry after {retry_after}s")
@@ -81,9 +82,7 @@ class PolluaxAPIClient:
             logger.debug("rate_limit_wait", sleep_seconds=round(sleep_time, 2))
             time.sleep(sleep_time)
 
-    def _request_with_retry(
-        self, method: str, endpoint: str, **kwargs: Any
-    ) -> httpx.Response:
+    def _request_with_retry(self, method: str, endpoint: str, **kwargs: Any) -> httpx.Response:
         """
         Make an HTTP request with exponential backoff retry.
 
@@ -102,9 +101,7 @@ class PolluaxAPIClient:
                 self._last_request_time = time.time()
 
                 if response.status_code == 429:
-                    retry_after = float(
-                        response.headers.get("Retry-After", self.retry_base_delay * (2 ** attempt))
-                    )
+                    retry_after = float(response.headers.get("Retry-After", self.retry_base_delay * (2**attempt)))
                     logger.warning(
                         "rate_limited",
                         attempt=attempt + 1,
@@ -124,7 +121,7 @@ class PolluaxAPIClient:
                         endpoint=endpoint,
                     )
                     if attempt < self.max_retries:
-                        backoff = self.retry_base_delay * (2 ** attempt)
+                        backoff = self.retry_base_delay * (2**attempt)
                         time.sleep(backoff)
                         continue
                     response.raise_for_status()
@@ -141,13 +138,11 @@ class PolluaxAPIClient:
                     endpoint=endpoint,
                 )
                 if attempt < self.max_retries:
-                    backoff = self.retry_base_delay * (2 ** attempt)
+                    backoff = self.retry_base_delay * (2**attempt)
                     time.sleep(backoff)
                     continue
 
-        raise ExtractionError(
-            f"Failed after {self.max_retries + 1} attempts: {endpoint}"
-        ) from last_exception
+        raise ExtractionError(f"Failed after {self.max_retries + 1} attempts: {endpoint}") from last_exception
 
     def fetch_paginated(
         self,

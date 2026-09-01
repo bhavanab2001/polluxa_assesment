@@ -36,15 +36,13 @@ class FactOutreachEvent(Base):
     This is the most granular fact table — every interaction between
     an agent and a lead is recorded as a separate event.
     """
+
     __tablename__ = "fact_outreach_event"
-    __table_args__ = (
-        UniqueConstraint("event_source_id", name="uq_event_source_id"),
-    )
+    __table_args__ = (UniqueConstraint("event_source_id", name="uq_event_source_id"),)
 
     event_key: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
     event_source_id: Mapped[str] = mapped_column(
-        String(200), nullable=False, index=True,
-        comment="Natural key from source system for idempotent upsert"
+        String(200), nullable=False, index=True, comment="Natural key from source system for idempotent upsert"
     )
 
     # Dimension foreign keys
@@ -56,23 +54,21 @@ class FactOutreachEvent(Base):
 
     # Event attributes
     event_type: Mapped[str] = mapped_column(
-        String(50), nullable=False, index=True,
-        comment="INVITE_SENT, ACCEPTED, MESSAGE_SENT, REPLY_RECEIVED, MEETING_BOOKED"
+        String(50),
+        nullable=False,
+        index=True,
+        comment="INVITE_SENT, ACCEPTED, MESSAGE_SENT, REPLY_RECEIVED, MEETING_BOOKED",
     )
     event_timestamp: Mapped[datetime] = mapped_column(DateTime, nullable=False)
     event_status: Mapped[str | None] = mapped_column(
-        String(50), nullable=True,
-        comment="SUCCESS, FAILED, PENDING, WITHDRAWN"
+        String(50), nullable=True, comment="SUCCESS, FAILED, PENDING, WITHDRAWN"
     )
     response_time_minutes: Mapped[int | None] = mapped_column(
-        Integer, nullable=True,
-        comment="Time between invite/message and response, in minutes"
+        Integer, nullable=True, comment="Time between invite/message and response, in minutes"
     )
 
     # Metadata
-    loaded_at: Mapped[datetime] = mapped_column(
-        DateTime, nullable=False, server_default=func.now()
-    )
+    loaded_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, server_default=func.now())
 
 
 # ─────────────────────────────────────────────────────────────
@@ -86,10 +82,9 @@ class FactDailyAgentActivity(Base):
     Pre-aggregated daily activity metrics for each LinkedIn agent.
     Used for trend analysis, utilisation tracking, and risk modeling.
     """
+
     __tablename__ = "fact_daily_agent_activity"
-    __table_args__ = (
-        UniqueConstraint("agent_key", "date_key", name="uq_agent_day"),
-    )
+    __table_args__ = (UniqueConstraint("agent_key", "date_key", name="uq_agent_day"),)
 
     activity_key: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
 
@@ -108,20 +103,16 @@ class FactDailyAgentActivity(Base):
     acceptance_rate: Mapped[float | None] = mapped_column(Float, nullable=True)
     reply_rate: Mapped[float | None] = mapped_column(Float, nullable=True)
     utilisation_pct: Mapped[float | None] = mapped_column(
-        Float, nullable=True,
-        comment="invites_sent / daily_invite_limit from agent tier"
+        Float, nullable=True, comment="invites_sent / daily_invite_limit from agent tier"
     )
 
     # Risk / anomaly (populated by Part 5 analytics)
     anomaly_score: Mapped[float | None] = mapped_column(
-        Float, nullable=True,
-        comment="0=normal, 1=warning, 2=critical — from anomaly detector"
+        Float, nullable=True, comment="0=normal, 1=warning, 2=critical — from anomaly detector"
     )
 
     # Metadata
-    loaded_at: Mapped[datetime] = mapped_column(
-        DateTime, nullable=False, server_default=func.now()
-    )
+    loaded_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, server_default=func.now())
 
 
 # ─────────────────────────────────────────────────────────────
@@ -135,10 +126,9 @@ class FactCampaignPerformance(Base):
     Aggregated performance metrics for each outreach campaign,
     used for ROI analysis and campaign comparison.
     """
+
     __tablename__ = "fact_campaign_performance"
-    __table_args__ = (
-        UniqueConstraint("campaign_key", "date_key", name="uq_campaign_day"),
-    )
+    __table_args__ = (UniqueConstraint("campaign_key", "date_key", name="uq_campaign_day"),)
 
     perf_key: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
 
@@ -158,9 +148,7 @@ class FactCampaignPerformance(Base):
     roi_score: Mapped[float | None] = mapped_column(Float, nullable=True)
 
     # Metadata
-    loaded_at: Mapped[datetime] = mapped_column(
-        DateTime, nullable=False, server_default=func.now()
-    )
+    loaded_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, server_default=func.now())
 
 
 # ─────────────────────────────────────────────────────────────
@@ -174,6 +162,7 @@ class FactPipelineRun(Base):
     Records metadata about every pipeline run for auditability,
     performance monitoring, and observability.
     """
+
     __tablename__ = "fact_pipeline_run"
 
     run_key: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
@@ -193,8 +182,7 @@ class FactPipelineRun(Base):
 
     # Status
     status: Mapped[str] = mapped_column(
-        String(50), nullable=False, default="RUNNING",
-        comment="RUNNING, SUCCESS, FAILED, PARTIAL"
+        String(50), nullable=False, default="RUNNING", comment="RUNNING, SUCCESS, FAILED, PARTIAL"
     )
     error_message: Mapped[str | None] = mapped_column(Text, nullable=True)
 

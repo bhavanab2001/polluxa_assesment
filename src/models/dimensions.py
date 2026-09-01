@@ -35,6 +35,7 @@ class DimAccountTier(Base):
     associated daily rate limits. Directly maps to the Account Age →
     Daily Limit Matrix from Part 1 of the assessment.
     """
+
     __tablename__ = "dim_account_tier"
 
     tier_key: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
@@ -56,10 +57,9 @@ class DimAgent(Base):
     status or tier changes, the current row is closed (valid_to set)
     and a new row is inserted.
     """
+
     __tablename__ = "dim_agent"
-    __table_args__ = (
-        UniqueConstraint("agent_id", "valid_from", name="uq_agent_version"),
-    )
+    __table_args__ = (UniqueConstraint("agent_id", "valid_from", name="uq_agent_version"),)
 
     agent_key: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     agent_id: Mapped[str] = mapped_column(String(100), nullable=False, index=True)
@@ -69,9 +69,7 @@ class DimAgent(Base):
     tier_key: Mapped[int | None] = mapped_column(Integer, nullable=True)
 
     # SCD Type 2 tracking columns
-    valid_from: Mapped[datetime] = mapped_column(
-        DateTime, nullable=False, server_default=func.now()
-    )
+    valid_from: Mapped[datetime] = mapped_column(DateTime, nullable=False, server_default=func.now())
     valid_to: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
     is_current: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
 
@@ -85,10 +83,9 @@ class DimLead(Base):
     Dimension table for outreach leads (prospects).
     Tracks changes in segment assignment and lead status over time.
     """
+
     __tablename__ = "dim_lead"
-    __table_args__ = (
-        UniqueConstraint("lead_id", "valid_from", name="uq_lead_version"),
-    )
+    __table_args__ = (UniqueConstraint("lead_id", "valid_from", name="uq_lead_version"),)
 
     lead_key: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     lead_id: Mapped[str] = mapped_column(String(100), nullable=False, index=True)
@@ -100,9 +97,7 @@ class DimLead(Base):
     lead_status: Mapped[str | None] = mapped_column(String(50), nullable=True)
 
     # SCD Type 2 tracking columns
-    valid_from: Mapped[datetime] = mapped_column(
-        DateTime, nullable=False, server_default=func.now()
-    )
+    valid_from: Mapped[datetime] = mapped_column(DateTime, nullable=False, server_default=func.now())
     valid_to: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
     is_current: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
 
@@ -116,6 +111,7 @@ class DimCampaign(Base):
     Dimension table for outreach campaigns.
     Contains campaign metadata like name, type, and creation date.
     """
+
     __tablename__ = "dim_campaign"
 
     campaign_key: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
@@ -124,9 +120,7 @@ class DimCampaign(Base):
     campaign_type: Mapped[str | None] = mapped_column(String(100), nullable=True)
     target_segment: Mapped[str | None] = mapped_column(String(100), nullable=True)
     created_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
-    updated_at: Mapped[datetime | None] = mapped_column(
-        DateTime, nullable=True, onupdate=func.now()
-    )
+    updated_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True, onupdate=func.now())
 
 
 # ─────────────────────────────────────────────────────────────
@@ -138,6 +132,7 @@ class DimDate(Base):
     Calendar date dimension for time-based analysis.
     Pre-populated with dates covering the analysis period.
     """
+
     __tablename__ = "dim_date"
 
     date_key: Mapped[int] = mapped_column(Integer, primary_key=True)  # YYYYMMDD format
@@ -161,6 +156,7 @@ class DimMessageTemplate(Base):
     Dimension table for message templates used in outreach campaigns.
     Tracks which templates are used for connection requests and follow-ups.
     """
+
     __tablename__ = "dim_message_template"
 
     template_key: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)

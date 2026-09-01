@@ -1,8 +1,6 @@
 """Unit tests for the Risk Scoring Model."""
 
-import pytest
-from src.analytics.risk_model import RiskModel, AgentRiskProfile
-from src.models.dimensions import DimAgent, DimAccountTier
+from src.analytics.risk_model import AgentRiskProfile
 
 
 def test_agent_risk_profile_dataclass():

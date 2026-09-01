@@ -10,19 +10,15 @@ Parses and ingests real personal LinkedIn data exports:
 from __future__ import annotations
 
 import csv
-import io
-import os
-import re
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any
 
-from sqlalchemy import select, text
 import structlog
+from sqlalchemy import select
 
-from src.models import get_session, init_db
-from src.models.dimensions import DimAgent, DimLead, DimCampaign, DimDate
-from src.models.facts import FactOutreachEvent, FactDailyAgentActivity
+from src.models import get_session
+from src.models.dimensions import DimAgent, DimCampaign, DimLead
+from src.models.facts import FactOutreachEvent
 from src.pipeline.loader import DataLoader
 
 logger = structlog.get_logger(__name__)
@@ -35,14 +31,14 @@ def parse_linkedin_date(date_str: str) -> datetime | None:
 
     date_str = date_str.strip()
     formats = [
-        "%d %b %Y",          # 15 Aug 2024
-        "%d-%b-%y",          # 15-Aug-24
-        "%Y-%m-%d",          # 2024-08-15
-        "%m/%d/%Y",          # 08/15/2024
-        "%m/%d/%y",          # 08/15/24
-        "%Y-%m-%d %H:%M:%S", # 2024-08-15 14:30:00
-        "%m/%d/%Y %I:%M:%S %p", # 08/15/2024 02:30:00 PM
-        "%Y-%m-%dT%H:%M:%SZ", # ISO
+        "%d %b %Y",  # 15 Aug 2024
+        "%d-%b-%y",  # 15-Aug-24
+        "%Y-%m-%d",  # 2024-08-15
+        "%m/%d/%Y",  # 08/15/2024
+        "%m/%d/%y",  # 08/15/24
+        "%Y-%m-%d %H:%M:%S",  # 2024-08-15 14:30:00
+        "%m/%d/%Y %I:%M:%S %p",  # 08/15/2024 02:30:00 PM
+        "%Y-%m-%dT%H:%M:%SZ",  # ISO
     ]
     for fmt in formats:
         try:
@@ -132,12 +128,16 @@ class LinkedInArchiveImporter:
             if not first_name and not last_name:
                 continue
 
-            full_name = f"{first_name} {last_name}".strip()
+            f"{first_name} {last_name}".strip()
             job_title = (row.get("Position") or row.get("Job Title") or "Professional").strip()
             company = (row.get("Company") or row.get("Organization") or "Self-Employed").strip()
-            url = (row.get("URL") or row.get("Profile URL") or f"https://linkedin.com/in/{first_name.lower()}-{last_name.lower()}").strip()
-            email = (row.get("Email Address") or row.get("Email") or None)
-            connected_on_raw = (row.get("Connected On") or row.get("Connected on") or "")
+            url = (
+                row.get("URL")
+                or row.get("Profile URL")
+                or f"https://linkedin.com/in/{first_name.lower()}-{last_name.lower()}"
+            ).strip()
+            email = row.get("Email Address") or row.get("Email") or None
+            connected_on_raw = row.get("Connected On") or row.get("Connected on") or ""
             connected_at = parse_linkedin_date(connected_on_raw) or datetime.now(timezone.utc)
 
             lead_id = f"real_lead_{abs(hash(url)) % 10000000}"
@@ -221,7 +221,7 @@ class LinkedInArchiveImporter:
         for row in reader:
             to_person = (row.get("To") or "").strip()
             direction = (row.get("Direction") or "OUTGOING").strip().upper()
-            sent_at_raw = (row.get("Sent At") or row.get("sent_at") or "")
+            sent_at_raw = row.get("Sent At") or row.get("sent_at") or ""
             sent_at = parse_linkedin_date(sent_at_raw) or datetime.now(timezone.utc)
 
             if "OUTGOING" not in direction and direction != "OUTGOING":

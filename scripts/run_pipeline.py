@@ -10,7 +10,6 @@ Usage:
 
 from __future__ import annotations
 
-import os
 import sys
 from pathlib import Path
 
@@ -42,6 +41,7 @@ def run(
 ) -> None:
     """Run the full ETL pipeline."""
     from src.logging_config import setup_logging
+
     setup_logging()
 
     console.print("\n[bold blue]🚀 Polluxa Analytics Pipeline[/bold blue]\n")
@@ -72,6 +72,7 @@ def run(
 def risk() -> None:
     """Run the risk model on all agents."""
     from src.logging_config import setup_logging
+
     setup_logging()
 
     console.print("\n[bold blue]🔍 Running Risk Model[/bold blue]\n")
@@ -116,6 +117,7 @@ def risk() -> None:
 def dq() -> None:
     """Run data quality checks only."""
     from src.logging_config import setup_logging
+
     setup_logging()
 
     console.print("\n[bold blue]✅ Running Data Quality Checks[/bold blue]\n")
@@ -136,11 +138,13 @@ def dq() -> None:
 def seed() -> None:
     """Generate realistic sample data for development/testing."""
     from src.logging_config import setup_logging
+
     setup_logging()
 
     console.print("\n[bold blue]🌱 Generating Sample Data[/bold blue]\n")
 
     from scripts.seed_data import generate_sample_data
+
     generate_sample_data()
 
     console.print("[green]✓ Sample data generated successfully![/green]")
@@ -154,7 +158,9 @@ def serve(
 ) -> None:
     """Start the Real-Time Webhook & Streaming Ingestion API server."""
     import uvicorn
+
     from src.logging_config import setup_logging
+
     setup_logging()
 
     console.print(f"\n[bold green]⚡ Starting Polluxa Real-Time Webhook Server on http://{host}:{port}[/bold green]")
@@ -172,6 +178,7 @@ def import_linkedin(
     """Import official personal LinkedIn data export files into PostgreSQL."""
     from src.logging_config import setup_logging
     from src.pipeline.linkedin_importer import LinkedInArchiveImporter
+
     setup_logging()
 
     console.print("\n[bold blue]📥 Importing Personal LinkedIn Data Archive[/bold blue]\n")
@@ -180,7 +187,9 @@ def import_linkedin(
 
     if connections_file:
         res = importer.import_connections(connections_file)
-        console.print(f"[green]✓ Connections imported:[/] {res['leads_added']} leads added, {res['events_added']} events added.")
+        console.print(
+            f"[green]✓ Connections imported:[/] {res['leads_added']} leads added, {res['events_added']} events added."
+        )
 
     if invitations_file:
         res = importer.import_invitations(invitations_file)
@@ -194,9 +203,9 @@ def import_linkedin(
 def demo() -> None:
     """Run the Part 8 live demonstration proving pipeline resilience and fault tolerance."""
     from scripts.demo_resilience import run_live_demo
+
     run_live_demo()
 
 
 if __name__ == "__main__":
     app()
-

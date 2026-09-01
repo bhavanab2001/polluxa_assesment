@@ -14,7 +14,6 @@ Risk levels:
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any
 
 from sqlalchemy import text
 from sqlalchemy.orm import Session
@@ -28,6 +27,7 @@ logger = get_logger("risk_model")
 @dataclass
 class AgentRiskProfile:
     """Risk profile for a single LinkedIn agent."""
+
     agent_key: int
     agent_id: str
     display_name: str | None
@@ -129,25 +129,15 @@ class RiskModel:
 
         # Run anomaly detection on each metric
         if len(acceptance_rates) >= 6:
-            anomaly_results["acceptance_rate"] = self.detector.detect_rate_collapse(
-                acceptance_rates, "acceptance_rate"
-            )
+            anomaly_results["acceptance_rate"] = self.detector.detect_rate_collapse(acceptance_rates, "acceptance_rate")
         if len(reply_rates) >= 6:
-            anomaly_results["reply_rate"] = self.detector.detect_rate_collapse(
-                reply_rates, "reply_rate"
-            )
+            anomaly_results["reply_rate"] = self.detector.detect_rate_collapse(reply_rates, "reply_rate")
         if len(accepted) >= 6 and len(replies) >= 6:
-            anomaly_results["ghosting_rate"] = self.detector.detect_ghosting(
-                accepted, replies
-            )
+            anomaly_results["ghosting_rate"] = self.detector.detect_ghosting(accepted, replies)
         if len(utilisation) >= 6:
-            anomaly_results["utilisation"] = self.detector.detect(
-                utilisation, "utilisation"
-            )
+            anomaly_results["utilisation"] = self.detector.detect(utilisation, "utilisation")
         if len(invites) >= 6:
-            anomaly_results["activity_volume"] = self.detector.detect(
-                [float(i) for i in invites], "activity_volume"
-            )
+            anomaly_results["activity_volume"] = self.detector.detect([float(i) for i in invites], "activity_volume")
 
         # Compute weighted risk score
         risk_score = 0.0
@@ -170,7 +160,10 @@ class RiskModel:
 
         # Compute recommended capacity
         rec_invites, rec_messages, justification = self._recommend_capacity(
-            risk_score, risk_level, tier_invite_limit, tier_message_limit,
+            risk_score,
+            risk_level,
+            tier_invite_limit,
+            tier_message_limit,
             anomaly_results,
         )
 
@@ -198,9 +191,7 @@ class RiskModel:
 
     def score_all_agents(self) -> list[AgentRiskProfile]:
         """Score all current agents and update their anomaly scores."""
-        agent_keys = self.session.execute(
-            text("SELECT agent_key FROM dim_agent WHERE is_current = true")
-        ).fetchall()
+        agent_keys = self.session.execute(text("SELECT agent_key FROM dim_agent WHERE is_current = true")).fetchall()
 
         profiles: list[AgentRiskProfile] = []
         for (ak,) in agent_keys:
@@ -249,32 +240,34 @@ class RiskModel:
             return (
                 tier_invite_limit,
                 tier_message_limit,
-                f"Low risk ({risk_score}). Maintaining tier ceiling: "
-                f"{tier_invite_limit} invites, {tier_message_limit} messages/day.",
+                (
+                    f"Low risk ({risk_score}). Maintaining tier ceiling: "
+                    f"{tier_invite_limit} invites, {tier_message_limit} messages/day."
+                ),
             )
         elif risk_level == "Amber":
             rec_invites = int(tier_invite_limit * 0.8)
             rec_messages = int((tier_message_limit or 0) * 0.8)
-            triggers = [
-                m for m, r in anomaly_results.items() if r.anomaly_score >= 1
-            ]
+            triggers = [m for m, r in anomaly_results.items() if r.anomaly_score >= 1]
             return (
                 rec_invites,
                 rec_messages,
-                f"Moderate risk ({risk_score}). Reducing to 80% capacity: "
-                f"{rec_invites} invites, {rec_messages} messages/day. "
-                f"Triggered by: {', '.join(triggers)}.",
+                (
+                    f"Moderate risk ({risk_score}). Reducing to 80% capacity: "
+                    f"{rec_invites} invites, {rec_messages} messages/day. "
+                    f"Triggered by: {', '.join(triggers)}."
+                ),
             )
         else:  # Red
             rec_invites = int(tier_invite_limit * 0.5)
             rec_messages = int((tier_message_limit or 0) * 0.5)
-            triggers = [
-                m for m, r in anomaly_results.items() if r.anomaly_score >= 2
-            ]
+            triggers = [m for m, r in anomaly_results.items() if r.anomaly_score >= 2]
             return (
                 rec_invites,
                 rec_messages,
-                f"HIGH RISK ({risk_score}). Halving capacity: "
-                f"{rec_invites} invites, {rec_messages} messages/day. "
-                f"Critical triggers: {', '.join(triggers)}. Immediate review recommended.",
+                (
+                    f"HIGH RISK ({risk_score}). Halving capacity: "
+                    f"{rec_invites} invites, {rec_messages} messages/day. "
+                    f"Critical triggers: {', '.join(triggers)}. Immediate review recommended."
+                ),
             )

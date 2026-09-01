@@ -18,11 +18,10 @@ from typing import Any
 from sqlalchemy import text
 from sqlalchemy.orm import Session
 
-from src.config import DataSourceMode, settings
+from src.config import settings
 from src.logging_config import get_logger, set_correlation_id
 from src.models import get_session, init_db
 from src.models.facts import FactPipelineRun
-from src.models.staging import PipelineWatermark
 from src.pipeline.dead_letter import DeadLetterQueue
 from src.pipeline.extractor import CSVExtractor, PolluaxAPIClient, get_extractor
 from src.pipeline.loader import IdempotentLoader
@@ -51,9 +50,7 @@ class PipelineOrchestrator:
         self.session = session or get_session()
         self.dlq = DeadLetterQueue()
         self.transformer = DataTransformer(dlq=self.dlq, run_id=self.run_id)
-        self.loader = IdempotentLoader(
-            session=self.session, dlq=self.dlq, run_id=self.run_id
-        )
+        self.loader = IdempotentLoader(session=self.session, dlq=self.dlq, run_id=self.run_id)
         self.start_time = datetime.now(timezone.utc)
         self.rows_extracted = 0
         self.rows_loaded = 0
@@ -261,7 +258,8 @@ class PipelineOrchestrator:
         """
         logger.info("aggregating_daily_agent_activity")
         try:
-            self.session.execute(text("""
+            self.session.execute(
+                text("""
                 INSERT INTO fact_daily_agent_activity
                     (agent_key, date_key, invites_sent, invites_accepted,
                      messages_sent, replies_received, meetings_booked,
@@ -301,7 +299,8 @@ class PipelineOrchestrator:
                     meetings_booked = EXCLUDED.meetings_booked,
                     acceptance_rate = EXCLUDED.acceptance_rate,
                     reply_rate = EXCLUDED.reply_rate
-            """))
+            """)
+            )
             self.session.commit()
             logger.info("daily_agent_activity_aggregated")
         except Exception as exc:
@@ -312,7 +311,8 @@ class PipelineOrchestrator:
         """Aggregate fact_outreach_event into fact_campaign_performance."""
         logger.info("aggregating_campaign_performance")
         try:
-            self.session.execute(text("""
+            self.session.execute(
+                text("""
                 INSERT INTO fact_campaign_performance
                     (campaign_key, date_key, total_leads, invites_sent, connected,
                      replied, meetings_booked, conversion_rate)
@@ -342,7 +342,8 @@ class PipelineOrchestrator:
                     replied = EXCLUDED.replied,
                     meetings_booked = EXCLUDED.meetings_booked,
                     conversion_rate = EXCLUDED.conversion_rate
-            """))
+            """)
+            )
             self.session.commit()
             logger.info("campaign_performance_aggregated")
         except Exception as exc:
@@ -353,6 +354,7 @@ class PipelineOrchestrator:
         """Run data quality checks and return composite score."""
         try:
             from src.quality.scoring import DQScorer
+
             scorer = DQScorer(session=self.session, run_id=self.run_id)
             score = scorer.run_all_checks()
             return score
@@ -427,8 +429,21 @@ class PipelineOrchestrator:
         start = date(2024, 1, 1)
         end = date(2027, 12, 31)
         day_names = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
-        month_names = ["", "January", "February", "March", "April", "May", "June",
-                       "July", "August", "September", "October", "November", "December"]
+        month_names = [
+            "",
+            "January",
+            "February",
+            "March",
+            "April",
+            "May",
+            "June",
+            "July",
+            "August",
+            "September",
+            "October",
+            "November",
+            "December",
+        ]
 
         current = start
         while current <= end:

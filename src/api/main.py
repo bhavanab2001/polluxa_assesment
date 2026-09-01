@@ -11,24 +11,22 @@ Enables real-time event streaming into the Polluxa Analytics Star Schema:
 
 from __future__ import annotations
 
+import uuid
 from contextlib import asynccontextmanager
 from datetime import datetime, timezone
-from typing import Any, List, Optional
-import uuid
+from typing import Any
 
-from fastapi import FastAPI, HTTPException, BackgroundTasks, status
-from pydantic import BaseModel, Field
-from sqlalchemy import text, select
 import structlog
+from fastapi import BackgroundTasks, FastAPI, HTTPException, status
+from pydantic import BaseModel, Field
+from sqlalchemy import text
 
 from src.config import settings
 from src.logging_config import setup_logging
-from src.models import get_session, get_engine, init_db
-from src.models.facts import FactOutreachEvent, FactDailyAgentActivity
-from src.pipeline.transformer import DataTransformer
-from src.pipeline.loader import DataLoader
+from src.models import get_session, init_db
 from src.pipeline.dead_letter import DeadLetterQueue
-from src.analytics.anomaly import AnomalyDetector
+from src.pipeline.loader import DataLoader
+from src.pipeline.transformer import DataTransformer
 
 setup_logging()
 logger = structlog.get_logger(__name__)
@@ -37,27 +35,29 @@ logger = structlog.get_logger(__name__)
 # ── Pydantic Request Models ──────────────────────────────────
 class LiveEventPayload(BaseModel):
     """Payload format for live LinkedIn events."""
-    event_id: Optional[str] = Field(default_factory=lambda: f"live_evt_{uuid.uuid4().hex[:12]}")
+
+    event_id: str | None = Field(default_factory=lambda: f"live_evt_{uuid.uuid4().hex[:12]}")
     agent_id: str = Field(..., description="ID or display name of the LinkedIn agent")
-    lead_id: Optional[str] = Field(default=None, description="Prospect/Lead ID")
-    campaign_id: Optional[str] = Field(default=None, description="Associated Campaign ID")
+    lead_id: str | None = Field(default=None, description="Prospect/Lead ID")
+    campaign_id: str | None = Field(default=None, description="Associated Campaign ID")
     event_type: str = Field(..., description="INVITE_SENT, ACCEPTED, MESSAGE_SENT, REPLY_RECEIVED, MEETING_BOOKED")
-    timestamp: Optional[str] = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
-    status: Optional[str] = Field(default="SUCCESS")
-    response_time_minutes: Optional[int] = None
-    template_id: Optional[str] = None
+    timestamp: str | None = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
+    status: str | None = Field(default="SUCCESS")
+    response_time_minutes: int | None = None
+    template_id: str | None = None
 
 
 class LiveLeadPayload(BaseModel):
     """Payload for registering live prospects."""
+
     lead_id: str = Field(..., description="Unique lead identifier")
     first_name: str
     last_name: str
-    company: Optional[str] = None
-    job_title: Optional[str] = None
-    linkedin_url: Optional[str] = None
-    email: Optional[str] = None
-    target_segment: Optional[str] = "Live Inbound"
+    company: str | None = None
+    job_title: str | None = None
+    linkedin_url: str | None = None
+    email: str | None = None
+    target_segment: str | None = "Live Inbound"
 
 
 class WebhookResponse(BaseModel):
@@ -66,7 +66,7 @@ class WebhookResponse(BaseModel):
     event_type: str
     persisted_at: str
     anomaly_flag: bool = False
-    warning: Optional[str] = None
+    warning: str | None = None
 
 
 # ── App Lifespan ─────────────────────────────────────────────
@@ -104,10 +104,7 @@ def health_check():
             "timestamp": datetime.now(timezone.utc).isoformat(),
         }
     except Exception as exc:
-        raise HTTPException(
-            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail=f"Database probe failed: {str(exc)}"
-        )
+        raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail=f"Database probe failed: {exc!s}")
     finally:
         session.close()
 
@@ -141,14 +138,16 @@ def ingest_live_event(payload: LiveEventPayload, background_tasks: BackgroundTas
             )
 
         # Load clean event
-        load_summary = loader.load_outreach_events(clean_events)
+        loader.load_outreach_events(clean_events)
 
         # Update real-time daily metrics
         date_key = clean_events[0].get("date_key")
         agent_id = clean_events[0].get("agent_id")
-        agent_key = loader._resolve_dimension_key(
-            "dim_agent", "agent_key", "agent_id", agent_id, scd2=True
-        ) if agent_id else None
+        agent_key = (
+            loader._resolve_dimension_key("dim_agent", "agent_key", "agent_id", agent_id, scd2=True)
+            if agent_id
+            else None
+        )
 
         if agent_key and date_key:
             _update_daily_aggregation(session, agent_key, date_key)
@@ -187,7 +186,9 @@ def receive_polluxa_webhook(payload: dict[str, Any]):
             "lead_id": payload.get("lead_id") or payload.get("contact_id"),
             "campaign_id": payload.get("campaign_id"),
             "event_type": payload.get("event_type") or payload.get("type") or payload.get("action") or "MESSAGE_SENT",
-            "timestamp": payload.get("timestamp") or payload.get("created_at") or datetime.now(timezone.utc).isoformat(),
+            "timestamp": payload.get("timestamp")
+            or payload.get("created_at")
+            or datetime.now(timezone.utc).isoformat(),
             "status": payload.get("status", "SUCCESS"),
             "response_time_minutes": payload.get("response_time_minutes"),
         }
@@ -209,21 +210,29 @@ def get_live_metrics():
     """Returns live KPI counters across the entire Star Schema."""
     session = get_session()
     try:
-        invites = session.execute(
-            text("SELECT COUNT(*) FROM fact_outreach_event WHERE event_type = 'INVITE_SENT'")
-        ).scalar() or 0
+        invites = (
+            session.execute(text("SELECT COUNT(*) FROM fact_outreach_event WHERE event_type = 'INVITE_SENT'")).scalar()
+            or 0
+        )
 
-        accepted = session.execute(
-            text("SELECT COUNT(*) FROM fact_outreach_event WHERE event_type = 'ACCEPTED'")
-        ).scalar() or 0
+        accepted = (
+            session.execute(text("SELECT COUNT(*) FROM fact_outreach_event WHERE event_type = 'ACCEPTED'")).scalar()
+            or 0
+        )
 
-        replies = session.execute(
-            text("SELECT COUNT(*) FROM fact_outreach_event WHERE event_type = 'REPLY_RECEIVED'")
-        ).scalar() or 0
+        replies = (
+            session.execute(
+                text("SELECT COUNT(*) FROM fact_outreach_event WHERE event_type = 'REPLY_RECEIVED'")
+            ).scalar()
+            or 0
+        )
 
-        meetings = session.execute(
-            text("SELECT COUNT(*) FROM fact_outreach_event WHERE event_type = 'MEETING_BOOKED'")
-        ).scalar() or 0
+        meetings = (
+            session.execute(
+                text("SELECT COUNT(*) FROM fact_outreach_event WHERE event_type = 'MEETING_BOOKED'")
+            ).scalar()
+            or 0
+        )
 
         acceptance_rate = round((accepted / invites * 100), 2) if invites > 0 else 0.0
         reply_rate = round((replies / accepted * 100), 2) if accepted > 0 else 0.0

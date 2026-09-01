@@ -1,6 +1,5 @@
 """Tests for FastAPI real-time event ingestion and webhook endpoints."""
 
-import pytest
 from fastapi.testclient import TestClient
 
 from src.api.main import app

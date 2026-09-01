@@ -173,13 +173,15 @@ class DataTransformer:
                     continue
                 self._seen_ids.add(agent_id)
 
-                clean.append({
-                    "agent_id": agent_id,
-                    "linkedin_email": _safe_str(record.get("email") or record.get("linkedin_email"), 255),
-                    "display_name": _safe_str(record.get("name") or record.get("display_name"), 255),
-                    "status": _safe_str(record.get("status"), 50) or "active",
-                    "tier_name": _safe_str(record.get("account_age") or record.get("tier")),
-                })
+                clean.append(
+                    {
+                        "agent_id": agent_id,
+                        "linkedin_email": _safe_str(record.get("email") or record.get("linkedin_email"), 255),
+                        "display_name": _safe_str(record.get("name") or record.get("display_name"), 255),
+                        "status": _safe_str(record.get("status"), 50) or "active",
+                        "tier_name": _safe_str(record.get("account_age") or record.get("tier")),
+                    }
+                )
             except Exception as exc:
                 self.dlq.add(record, str(exc), "transformer", self.run_id)
         logger.info("agents_transformed", input=len(raw_records), output=len(clean))
@@ -188,6 +190,7 @@ class DataTransformer:
     def transform_leads(self, raw_records: list[dict[str, Any]]) -> list[dict[str, Any]]:
         """Transform raw lead records into clean dimension records."""
         import hashlib
+
         clean: list[dict[str, Any]] = []
         self._seen_ids.clear()
         for record in raw_records:
@@ -216,15 +219,26 @@ class DataTransformer:
                 if not full_name and (record.get("first_name") or record.get("last_name")):
                     full_name = f"{record.get('first_name', '')} {record.get('last_name', '')}".strip()
 
-                clean.append({
-                    "lead_id": lead_id,
-                    "full_name": full_name or "Unknown Prospect",
-                    "company": _safe_str(record.get("company") or record.get("organization"), 255) or "Unknown Company",
-                    "title": _safe_str(record.get("title") or record.get("job_title") or record.get("Position"), 255) or "Professional",
-                    "linkedin_url": _safe_str(record.get("linkedin_url") or record.get("profile_url") or record.get("URL"), 500),
-                    "segment": _safe_str(record.get("segment") or record.get("list_name") or record.get("location"), 100) or "Target Prospects",
-                    "lead_status": _safe_str(record.get("status") or record.get("lead_status"), 50) or "NEW",
-                })
+                clean.append(
+                    {
+                        "lead_id": lead_id,
+                        "full_name": full_name or "Unknown Prospect",
+                        "company": _safe_str(record.get("company") or record.get("organization"), 255)
+                        or "Unknown Company",
+                        "title": _safe_str(
+                            record.get("title") or record.get("job_title") or record.get("Position"), 255
+                        )
+                        or "Professional",
+                        "linkedin_url": _safe_str(
+                            record.get("linkedin_url") or record.get("profile_url") or record.get("URL"), 500
+                        ),
+                        "segment": _safe_str(
+                            record.get("segment") or record.get("list_name") or record.get("location"), 100
+                        )
+                        or "Target Prospects",
+                        "lead_status": _safe_str(record.get("status") or record.get("lead_status"), 50) or "NEW",
+                    }
+                )
             except Exception as exc:
                 self.dlq.add(record, str(exc), "transformer", self.run_id)
         logger.info("leads_transformed", input=len(raw_records), output=len(clean))
@@ -244,13 +258,15 @@ class DataTransformer:
                     continue
                 self._seen_ids.add(campaign_id)
 
-                clean.append({
-                    "campaign_id": campaign_id,
-                    "campaign_name": _safe_str(record.get("name") or record.get("campaign_name"), 255),
-                    "campaign_type": _safe_str(record.get("type") or record.get("campaign_type"), 100),
-                    "target_segment": _safe_str(record.get("segment") or record.get("target_segment"), 100),
-                    "created_at": _parse_timestamp(record.get("created_at")),
-                })
+                clean.append(
+                    {
+                        "campaign_id": campaign_id,
+                        "campaign_name": _safe_str(record.get("name") or record.get("campaign_name"), 255),
+                        "campaign_type": _safe_str(record.get("type") or record.get("campaign_type"), 100),
+                        "target_segment": _safe_str(record.get("segment") or record.get("target_segment"), 100),
+                        "created_at": _parse_timestamp(record.get("created_at")),
+                    }
+                )
             except Exception as exc:
                 self.dlq.add(record, str(exc), "transformer", self.run_id)
         logger.info("campaigns_transformed", input=len(raw_records), output=len(clean))
@@ -278,25 +294,29 @@ class DataTransformer:
                     continue
 
                 event_timestamp = _parse_timestamp(
-                    record.get("timestamp") or record.get("event_timestamp")
-                    or record.get("created_at") or record.get("date")
+                    record.get("timestamp")
+                    or record.get("event_timestamp")
+                    or record.get("created_at")
+                    or record.get("date")
                 )
                 if not event_timestamp:
                     self.dlq.add(record, "Missing or unparseable timestamp", "transformer", self.run_id)
                     continue
 
-                clean.append({
-                    "event_source_id": event_source_id,
-                    "agent_id": _safe_str(record.get("agent_id")),
-                    "lead_id": _safe_str(record.get("lead_id")),
-                    "campaign_id": _safe_str(record.get("campaign_id")),
-                    "template_id": _safe_str(record.get("template_id")),
-                    "event_type": event_type,
-                    "event_timestamp": event_timestamp,
-                    "date_key": _compute_date_key(event_timestamp),
-                    "event_status": _safe_str(record.get("status"), 50) or "SUCCESS",
-                    "response_time_minutes": _safe_int(record.get("response_time_minutes")),
-                })
+                clean.append(
+                    {
+                        "event_source_id": event_source_id,
+                        "agent_id": _safe_str(record.get("agent_id")),
+                        "lead_id": _safe_str(record.get("lead_id")),
+                        "campaign_id": _safe_str(record.get("campaign_id")),
+                        "template_id": _safe_str(record.get("template_id")),
+                        "event_type": event_type,
+                        "event_timestamp": event_timestamp,
+                        "date_key": _compute_date_key(event_timestamp),
+                        "event_status": _safe_str(record.get("status"), 50) or "SUCCESS",
+                        "response_time_minutes": _safe_int(record.get("response_time_minutes")),
+                    }
+                )
             except Exception as exc:
                 self.dlq.add(record, str(exc), "transformer", self.run_id)
 
@@ -322,13 +342,15 @@ class DataTransformer:
                     continue
                 self._seen_ids.add(template_id)
 
-                clean.append({
-                    "template_id": template_id,
-                    "template_name": _safe_str(record.get("name") or record.get("template_name"), 255),
-                    "template_body": _safe_str(record.get("body") or record.get("template_body")),
-                    "channel": _safe_str(record.get("channel"), 50),
-                    "created_at": _parse_timestamp(record.get("created_at")),
-                })
+                clean.append(
+                    {
+                        "template_id": template_id,
+                        "template_name": _safe_str(record.get("name") or record.get("template_name"), 255),
+                        "template_body": _safe_str(record.get("body") or record.get("template_body")),
+                        "channel": _safe_str(record.get("channel"), 50),
+                        "created_at": _parse_timestamp(record.get("created_at")),
+                    }
+                )
             except Exception as exc:
                 self.dlq.add(record, str(exc), "transformer", self.run_id)
         logger.info("templates_transformed", input=len(raw_records), output=len(clean))

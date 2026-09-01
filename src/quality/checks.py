@@ -71,19 +71,23 @@ class DQChecks:
 
             null_counts: dict[str, int] = {}
             for col in columns:
-                null_count = self.session.execute(
-                    text(f"SELECT COUNT(*) FROM {table} WHERE {col} IS NULL")
-                ).scalar() or 0
+                null_count = (
+                    self.session.execute(text(f"SELECT COUNT(*) FROM {table} WHERE {col} IS NULL")).scalar() or 0
+                )
                 null_counts[col] = null_count
 
             total_nulls = sum(null_counts.values())
             total_checks = total * len(columns)
             score = ((total_checks - total_nulls) / total_checks) * 100 if total_checks > 0 else 100.0
 
-            results.append(CheckResult(
-                "completeness", table, score,
-                {"null_counts": null_counts, "total_rows": total},
-            ))
+            results.append(
+                CheckResult(
+                    "completeness",
+                    table,
+                    score,
+                    {"null_counts": null_counts, "total_rows": total},
+                )
+            )
 
         avg_score = sum(r.score for r in results) / len(results) if results else 100.0
         logger.info("completeness_check_complete", score=round(avg_score, 2))
@@ -113,18 +117,19 @@ class DQChecks:
 
             # For SCD2 tables, check uniqueness within current records only
             if table in ("dim_agent", "dim_lead"):
-                distinct = self.session.execute(
-                    text(f"SELECT COUNT(DISTINCT {key_col}) FROM {table} WHERE is_current = true")
-                ).scalar() or 0
-                current_total = self.session.execute(
-                    text(f"SELECT COUNT(*) FROM {table} WHERE is_current = true")
-                ).scalar() or 0
+                distinct = (
+                    self.session.execute(
+                        text(f"SELECT COUNT(DISTINCT {key_col}) FROM {table} WHERE is_current = true")
+                    ).scalar()
+                    or 0
+                )
+                current_total = (
+                    self.session.execute(text(f"SELECT COUNT(*) FROM {table} WHERE is_current = true")).scalar() or 0
+                )
                 score = (distinct / current_total) * 100 if current_total > 0 else 100.0
                 details = {"distinct": distinct, "total_current": current_total}
             else:
-                distinct = self.session.execute(
-                    text(f"SELECT COUNT(DISTINCT {key_col}) FROM {table}")
-                ).scalar() or 0
+                distinct = self.session.execute(text(f"SELECT COUNT(DISTINCT {key_col}) FROM {table}")).scalar() or 0
                 score = (distinct / total) * 100 if total > 0 else 100.0
                 details = {"distinct": distinct, "total": total}
 
@@ -147,30 +152,54 @@ class DQChecks:
         # 1. Event type validity
         total_events = self._count_rows("fact_outreach_event")
         if total_events > 0:
-            valid_types = "('INVITE_SENT','ACCEPTED','MESSAGE_SENT','REPLY_RECEIVED','MEETING_BOOKED','WITHDRAWN','FAILED')"
-            invalid_count = self.session.execute(
-                text(f"SELECT COUNT(*) FROM fact_outreach_event WHERE event_type NOT IN {valid_types}")
-            ).scalar() or 0
+            valid_types = (
+                "('INVITE_SENT','ACCEPTED','MESSAGE_SENT','REPLY_RECEIVED','MEETING_BOOKED','WITHDRAWN','FAILED')"
+            )
+            invalid_count = (
+                self.session.execute(
+                    text(f"SELECT COUNT(*) FROM fact_outreach_event WHERE event_type NOT IN {valid_types}")
+                ).scalar()
+                or 0
+            )
             score = ((total_events - invalid_count) / total_events) * 100
-            results.append(CheckResult("validity", "fact_outreach_event.event_type", score, {
-                "invalid_event_types": invalid_count,
-            }))
+            results.append(
+                CheckResult(
+                    "validity",
+                    "fact_outreach_event.event_type",
+                    score,
+                    {
+                        "invalid_event_types": invalid_count,
+                    },
+                )
+            )
         else:
             results.append(CheckResult("validity", "fact_outreach_event.event_type", 100.0))
 
         # 2. Daily invite counts vs tier limits
         total_activity = self._count_rows("fact_daily_agent_activity")
         if total_activity > 0:
-            violations = self.session.execute(text("""
+            violations = (
+                self.session.execute(
+                    text("""
                 SELECT COUNT(*) FROM fact_daily_agent_activity a
                 JOIN dim_agent da ON a.agent_key = da.agent_key AND da.is_current = true
                 JOIN dim_account_tier t ON da.tier_key = t.tier_key
                 WHERE a.invites_sent > t.daily_invite_limit
-            """)).scalar() or 0
+            """)
+                ).scalar()
+                or 0
+            )
             score = ((total_activity - violations) / total_activity) * 100
-            results.append(CheckResult("validity", "fact_daily_agent_activity.tier_limits", score, {
-                "tier_limit_violations": violations,
-            }))
+            results.append(
+                CheckResult(
+                    "validity",
+                    "fact_daily_agent_activity.tier_limits",
+                    score,
+                    {
+                        "tier_limit_violations": violations,
+                    },
+                )
+            )
         else:
             results.append(CheckResult("validity", "fact_daily_agent_activity.tier_limits", 100.0))
 
@@ -189,18 +218,30 @@ class DQChecks:
 
         total_events = self._count_rows("fact_outreach_event")
         if total_events > 0:
-            stale_count = self.session.execute(
-                text("SELECT COUNT(*) FROM fact_outreach_event WHERE loaded_at < :cutoff"),
-                {"cutoff": sla_cutoff},
-            ).scalar() or 0
+            stale_count = (
+                self.session.execute(
+                    text("SELECT COUNT(*) FROM fact_outreach_event WHERE loaded_at < :cutoff"),
+                    {"cutoff": sla_cutoff},
+                ).scalar()
+                or 0
+            )
 
             # For first runs, all data may be "fresh" by loaded_at
             fresh = total_events - stale_count
             score = (fresh / total_events) * 100
-            results.append(CheckResult("timeliness", "fact_outreach_event", score, {
-                "total": total_events, "fresh": fresh, "stale": stale_count,
-                "sla_hours": 24,
-            }))
+            results.append(
+                CheckResult(
+                    "timeliness",
+                    "fact_outreach_event",
+                    score,
+                    {
+                        "total": total_events,
+                        "fresh": fresh,
+                        "stale": stale_count,
+                        "sla_hours": 24,
+                    },
+                )
+            )
         else:
             results.append(CheckResult("timeliness", "fact_outreach_event", 100.0))
 
@@ -227,30 +268,42 @@ class DQChecks:
         ]
 
         for fact_table, fk_col, dim_table, pk_col in fk_checks:
-            total = self.session.execute(
-                text(f"SELECT COUNT(*) FROM {fact_table} WHERE {fk_col} IS NOT NULL")
-            ).scalar() or 0
+            total = (
+                self.session.execute(text(f"SELECT COUNT(*) FROM {fact_table} WHERE {fk_col} IS NOT NULL")).scalar()
+                or 0
+            )
 
             if total == 0:
-                results.append(CheckResult(
-                    "referential_integrity", f"{fact_table}.{fk_col}", 100.0,
-                    {"note": "no non-null FK values"},
-                ))
+                results.append(
+                    CheckResult(
+                        "referential_integrity",
+                        f"{fact_table}.{fk_col}",
+                        100.0,
+                        {"note": "no non-null FK values"},
+                    )
+                )
                 continue
 
-            orphans = self.session.execute(
-                text(f"""
+            orphans = (
+                self.session.execute(
+                    text(f"""
                     SELECT COUNT(*) FROM {fact_table} f
                     LEFT JOIN {dim_table} d ON f.{fk_col} = d.{pk_col}
                     WHERE f.{fk_col} IS NOT NULL AND d.{pk_col} IS NULL
                 """)
-            ).scalar() or 0
+                ).scalar()
+                or 0
+            )
 
             score = ((total - orphans) / total) * 100
-            results.append(CheckResult(
-                "referential_integrity", f"{fact_table}.{fk_col}", score,
-                {"total_fks": total, "orphans": orphans},
-            ))
+            results.append(
+                CheckResult(
+                    "referential_integrity",
+                    f"{fact_table}.{fk_col}",
+                    score,
+                    {"total_fks": total, "orphans": orphans},
+                )
+            )
 
         avg_score = sum(r.score for r in results) / len(results) if results else 100.0
         logger.info("referential_integrity_check_complete", score=round(avg_score, 2))

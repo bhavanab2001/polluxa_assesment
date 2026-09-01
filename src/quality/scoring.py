@@ -74,10 +74,7 @@ class DQScorer:
             dimension_scores[dimension] = avg
 
         # Compute weighted composite score
-        composite_score = sum(
-            dimension_scores[dim] * weight
-            for dim, weight in DIMENSION_WEIGHTS.items()
-        )
+        composite_score = sum(dimension_scores[dim] * weight for dim, weight in DIMENSION_WEIGHTS.items())
         composite_score = round(composite_score, 2)
         passed = composite_score >= self.threshold
 
@@ -131,6 +128,4 @@ class DQScorer:
                 )
 
         self.session.commit()
-        logger.info("dq_results_persisted", run_id=self.run_id, check_count=sum(
-            len(r) for r in all_results.values()
-        ))
+        logger.info("dq_results_persisted", run_id=self.run_id, check_count=sum(len(r) for r in all_results.values()))

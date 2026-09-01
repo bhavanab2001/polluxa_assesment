@@ -1,8 +1,8 @@
 """Unit tests for the AlertNotifier."""
 
-import pytest
-from unittest.mock import patch, MagicMock
-from src.alerts.notifier import AlertNotifier, AlertLevel
+from unittest.mock import MagicMock, patch
+
+from src.alerts.notifier import AlertLevel, AlertNotifier
 
 
 def test_alert_notifier_fallback_logging():

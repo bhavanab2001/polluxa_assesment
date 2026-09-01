@@ -7,8 +7,8 @@ from __future__ import annotations
 import os
 
 import pytest
-from sqlalchemy import create_engine, text
-from sqlalchemy.orm import Session, sessionmaker
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
 
 # Use a test database (SQLite in-memory for fast CI, or test Postgres)
 TEST_DB_URL = os.environ.get(
@@ -28,11 +28,11 @@ def engine():
 @pytest.fixture(scope="session")
 def create_tables(engine):
     """Create all tables in the test database."""
-    from src.models import Base
     # Import all models to register them
-    import src.models.dimensions  # noqa: F401
-    import src.models.facts  # noqa: F401
+    import src.models.dimensions
+    import src.models.facts
     import src.models.staging  # noqa: F401
+    from src.models import Base
 
     Base.metadata.create_all(engine)
     yield
