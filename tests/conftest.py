@@ -25,17 +25,15 @@ def engine():
     eng.dispose()
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture(autouse=True, scope="session")
 def create_tables(engine):
-    """Create all tables in the test database."""
-    # Import all models to register them
-    import src.models.dimensions
-    import src.models.facts
-    import src.models.staging  # noqa: F401
-    from src.models import Base
+    """Create all tables in the test database before tests execute."""
+    from src.models import Base, init_db
 
-    Base.metadata.create_all(engine)
+    # Initialize all tables
+    init_db()
     yield
+    # Cleanup
     Base.metadata.drop_all(engine)
 
 
