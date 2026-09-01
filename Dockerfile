@@ -36,6 +36,6 @@ RUN mkdir -p /app/data/imports /app/logs && \
 USER appuser
 
 # Default command: run the pipeline
-ENTRYPOINT ["python", "scripts/run_pipeline.py"]
-CMD ["run"]
+CMD ["python", "scripts/run_pipeline.py", "run"]
+
 
