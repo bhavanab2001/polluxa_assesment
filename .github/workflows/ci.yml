@@ -98,22 +98,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
-      - name: Build Docker image
-        uses: docker/build-push-action@v5
-        with:
-          context: .
-          push: false
-          tags: polluxa-analytics:${{ github.sha }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-
-      - name: Test Docker image
+      - name: Build and Test Docker image
         run: |
           docker build -t polluxa-analytics:test .
-          docker run --rm polluxa-analytics:test python -c "from src.config import settings; print('Image OK')"
+          docker run --rm polluxa-analytics:test python -c "from src.config import settings; print('Docker Image Verified OK')"
 
   # ── Deploy Gate ────────────────────────────────────────────
   deploy-gate:
@@ -125,3 +113,4 @@ jobs:
     steps:
       - name: Deployment approved
         run: echo "All checks passed. Ready for deployment."
+

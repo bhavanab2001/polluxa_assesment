@@ -7,44 +7,39 @@ from __future__ import annotations
 import os
 
 import pytest
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
 
-# Use a test database (SQLite in-memory for fast CI, or test Postgres)
+from src.config import settings
+from src.models import get_engine, get_session, init_db
+
+# Use test database URL (PostgreSQL in CI or configured db_url)
 TEST_DB_URL = os.environ.get(
     "TEST_DATABASE_URL",
-    "sqlite:///test_polluxa.db",
+    settings.db_url,
 )
+if TEST_DB_URL:
+    settings.database_url = TEST_DB_URL
 
 
 @pytest.fixture(scope="session")
 def engine():
-    """Create a test database engine."""
-    eng = create_engine(TEST_DB_URL, echo=False)
-    yield eng
-    eng.dispose()
+    """Get the active test database engine."""
+    return get_engine()
 
 
 @pytest.fixture(autouse=True, scope="session")
 def create_tables(engine):
     """Create all tables in the test database before tests execute."""
-    from src.models import Base, init_db
-
-    # Initialize all tables
     init_db()
     yield
-    # Cleanup
-    Base.metadata.drop_all(engine)
 
 
 @pytest.fixture
 def session(engine, create_tables):
     """Create a new database session for a test."""
-    SessionLocal = sessionmaker(bind=engine)
-    session = SessionLocal()
-    yield session
-    session.rollback()
-    session.close()
+    sess = get_session()
+    yield sess
+    sess.rollback()
+    sess.close()
 
 
 @pytest.fixture

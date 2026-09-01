@@ -3,7 +3,9 @@
 from fastapi.testclient import TestClient
 
 from src.api.main import app
+from src.models import init_db
 
+init_db()
 client = TestClient(app)
 
 
