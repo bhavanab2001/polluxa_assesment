@@ -1,0 +1,44 @@
+version: "3.9"
+
+services:
+  # ── PostgreSQL Database ────────────────────────────────────
+  postgres:
+    image: postgres:16-alpine
+    container_name: polluxa-postgres
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-polluxa_analytics}
+      POSTGRES_USER: ${POSTGRES_USER:-polluxa}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-changeme_secure_password}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-polluxa} -d ${POSTGRES_DB:-polluxa_analytics}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  # ── Pipeline Application ───────────────────────────────────
+  pipeline:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: polluxa-pipeline
+    env_file:
+      - .env
+    environment:
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+    volumes:
+      - ./data/imports:/app/data/imports:ro
+      - ./logs:/app/logs
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: "no"
+
+volumes:
+  postgres_data:
+    driver: local

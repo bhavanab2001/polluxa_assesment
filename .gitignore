@@ -1,0 +1,51 @@
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+dist/
+build/
+*.egg
+.venv/
+venv/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Data imports (may contain sensitive data)
+data/imports/*.csv
+data/imports/*.json
+
+# Logs
+logs/
+*.log
+
+# Database
+*.db
+*.sqlite3
+
+# Power BI temp files
+powerbi/*.tmp
+
+# Test / Coverage
+.coverage
+htmlcov/
+.pytest_cache/
+.mypy_cache/
+
+# Docker
+docker-compose.override.yml
