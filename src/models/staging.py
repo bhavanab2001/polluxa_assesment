@@ -10,7 +10,7 @@ from __future__ import annotations
 from datetime import datetime
 
 from sqlalchemy import (
-    BigInteger,
+    JSON,
     DateTime,
     Float,
     Integer,
@@ -35,10 +35,10 @@ class StgRawEvent(Base):
 
     __tablename__ = "stg_raw_events"
 
-    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     source_id: Mapped[str] = mapped_column(String(200), nullable=False, index=True)
     source_type: Mapped[str] = mapped_column(String(50), nullable=False, comment="api or csv")
-    raw_payload: Mapped[dict] = mapped_column(JSONB, nullable=False)
+    raw_payload: Mapped[dict] = mapped_column(JSON().with_variant(JSONB, "postgresql"), nullable=False)
     received_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, server_default=func.now())
     processed: Mapped[bool] = mapped_column(default=False)
     run_id: Mapped[str | None] = mapped_column(String(100), nullable=True)
@@ -79,9 +79,9 @@ class DeadLetterRecord(Base):
 
     __tablename__ = "dead_letter_queue"
 
-    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     source_id: Mapped[str | None] = mapped_column(String(200), nullable=True)
-    record_payload: Mapped[dict] = mapped_column(JSONB, nullable=False)
+    record_payload: Mapped[dict] = mapped_column(JSON().with_variant(JSONB, "postgresql"), nullable=False)
     error_message: Mapped[str] = mapped_column(Text, nullable=False)
     error_type: Mapped[str | None] = mapped_column(String(100), nullable=True)
     source: Mapped[str | None] = mapped_column(
@@ -104,7 +104,7 @@ class DqResult(Base):
 
     __tablename__ = "dq_results"
 
-    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     run_id: Mapped[str] = mapped_column(String(100), nullable=False, index=True)
     check_dimension: Mapped[str] = mapped_column(
         String(50), nullable=False, comment="completeness, uniqueness, validity, timeliness, referential_integrity"
@@ -112,7 +112,7 @@ class DqResult(Base):
     table_name: Mapped[str] = mapped_column(String(100), nullable=False)
     score: Mapped[float] = mapped_column(Float, nullable=False)
     weight: Mapped[float] = mapped_column(Float, nullable=False)
-    details: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
+    details: Mapped[dict | None] = mapped_column(JSON().with_variant(JSONB, "postgresql"), nullable=True)
     checked_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, server_default=func.now())
     composite_score: Mapped[float | None] = mapped_column(
         Float, nullable=True, comment="Weighted composite score for this run (filled on final check)"

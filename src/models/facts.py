@@ -40,7 +40,7 @@ class FactOutreachEvent(Base):
     __tablename__ = "fact_outreach_event"
     __table_args__ = (UniqueConstraint("event_source_id", name="uq_event_source_id"),)
 
-    event_key: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    event_key: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     event_source_id: Mapped[str] = mapped_column(
         String(200), nullable=False, index=True, comment="Natural key from source system for idempotent upsert"
     )
@@ -130,7 +130,7 @@ class FactCampaignPerformance(Base):
     __tablename__ = "fact_campaign_performance"
     __table_args__ = (UniqueConstraint("campaign_key", "date_key", name="uq_campaign_day"),)
 
-    perf_key: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    perf_key: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
 
     # Dimension foreign keys
     campaign_key: Mapped[int] = mapped_column(Integer, nullable=False, index=True)
@@ -165,7 +165,7 @@ class FactPipelineRun(Base):
 
     __tablename__ = "fact_pipeline_run"
 
-    run_key: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    run_key: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     run_id: Mapped[str] = mapped_column(String(100), unique=True, nullable=False)
     correlation_id: Mapped[str | None] = mapped_column(String(100), nullable=True)
 

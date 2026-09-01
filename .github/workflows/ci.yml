@@ -37,28 +37,8 @@ jobs:
     runs-on: ubuntu-latest
     needs: lint
 
-    services:
-      postgres:
-        image: postgres:16-alpine
-        env:
-          POSTGRES_DB: polluxa_test
-          POSTGRES_USER: polluxa
-          POSTGRES_PASSWORD: test_password
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-
     env:
-      POSTGRES_HOST: localhost
-      POSTGRES_PORT: 5432
-      POSTGRES_DB: polluxa_test
-      POSTGRES_USER: polluxa
-      POSTGRES_PASSWORD: test_password
-      DATABASE_URL: postgresql://polluxa:test_password@localhost:5432/polluxa_test
+      TEST_DATABASE_URL: sqlite:///test_polluxa.db
       DATA_SOURCE_MODE: csv
       LOG_FORMAT: console
       LOG_LEVEL: DEBUG
